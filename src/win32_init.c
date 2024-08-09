@@ -608,6 +608,7 @@ void _glfwPlatformTerminate(void)
                           SPIF_SENDCHANGE);
 
     free(_glfw.win32.clipboardString);
+    free(_glfw.win32.keyboardLayoutName);
     free(_glfw.win32.rawInput);
 
     _glfwTerminateWGL();
