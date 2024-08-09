@@ -10,15 +10,15 @@ application development.  It provides a simple, platform-independent API for
 creating windows, contexts and surfaces, reading input, handling events, etc.
 
 GLFW natively supports Windows, macOS and Linux and other Unix-like systems.  On
-Linux both Wayland and X11 are supported.
+Linux both X11 and Wayland are supported.
 
 GLFW is licensed under the [zlib/libpng
 license](https://www.glfw.org/license.html).
 
 You can [download](https://www.glfw.org/download.html) the latest stable release
-as source or Windows binaries.  Each release starting with 3.0 also has
-a corresponding [annotated tag](https://github.com/glfw/glfw/releases) with
-source and binary archives.
+as source or Windows binaries, or fetch the `latest` branch from GitHub.  Each
+release starting with 3.0 also has a corresponding [annotated
+tag](https://github.com/glfw/glfw/releases) with source and binary archives.
 
 The [documentation](https://www.glfw.org/docs/latest/) is available online and is
 included in all source and binary archives.  See the [release
@@ -46,19 +46,18 @@ features or fixing bugs.
 
 ## Compiling GLFW
 
-GLFW is written primarily in C99, with parts of macOS support being written in
-Objective-C.  GLFW itself requires only the headers and libraries for your OS
-and window system.  It does not need any additional headers for context creation
-APIs (WGL, GLX, EGL, NSGL, OSMesa) or rendering APIs (OpenGL, OpenGL ES, Vulkan)
-to enable support for them.
+GLFW itself requires only the headers and libraries for your OS and window
+system.  It does not need the headers for any context creation API (WGL, GLX,
+EGL, NSGL, OSMesa) or rendering API (OpenGL, OpenGL ES, Vulkan) to enable
+support for them.
 
-GLFW supports compilation on Windows with Visual C++ 2013 and later, MinGW and
+GLFW supports compilation on Windows with Visual C++ 2010 and later, MinGW and
 MinGW-w64, on macOS with Clang and on Linux and other Unix-like systems with GCC
 and Clang.  It will likely compile in other environments as well, but this is
 not regularly tested.
 
-There are [pre-compiled binaries](https://www.glfw.org/download.html) available
-for all supported compilers on Windows and macOS.
+There are [pre-compiled Windows binaries](https://www.glfw.org/download.html)
+available for all supported compilers.
 
 See the [compilation guide](https://www.glfw.org/docs/latest/compile.html) for
 more information about how to compile GLFW yourself.
@@ -79,7 +78,7 @@ more information.
 
 ## System requirements
 
-GLFW supports Windows XP and later and macOS 10.11 and later.  Linux and other
+GLFW supports Windows XP and later and macOS 10.8 and later.  Linux and other
 Unix-like systems running the X Window System are supported even without
 a desktop environment or modern extensions, although some features require
 a running window or clipboard manager.  The OSMesa backend requires Mesa 6.3.
@@ -90,8 +89,10 @@ in the documentation for more information.
 
 ## Dependencies
 
-GLFW itself needs only CMake 3.4 or later and the headers and libraries for your
-OS and window system.
+GLFW itself depends only on the headers and libraries for your window system.
+
+The (experimental) Wayland backend also depends on the `extra-cmake-modules`
+package, which is used to generate Wayland protocol headers.
 
 The examples and test programs depend on a number of tiny libraries.  These are
 located in the `deps/` directory.
@@ -119,19 +120,14 @@ guide](https://github.com/glfw/glfw/blob/master/docs/CONTRIBUTING.md) for
 information on what to include when reporting a bug.
 
 
-## Changelog since 3.4
+## Changelog
 
- - Added `GLFW_UNLIMITED_MOUSE_BUTTONS` input mode that allows mouse buttons beyond
-   the limit of the mouse button tokens to be reported (#2423)
- - [Cocoa] Added `QuartzCore` framework as link-time dependency
- - [Cocoa] Removed support for OS X 10.10 Yosemite and earlier (#2506)
- - [Wayland] Bugfix: The fractional scaling related objects were not destroyed
- - [Wayland] Bugfix: `glfwInit` would segfault on compositor with no seat (#2517)
- - [Wayland] Bugfix: A drag entering a non-GLFW surface could cause a segfault
- - [Null] Added Vulkan 'window' surface creation via `VK_EXT_headless_surface`
- - [Null] Added EGL context creation on Mesa via `EGL_MESA_platform_surfaceless`
- - [EGL] Allowed native access on Wayland with `GLFW_CONTEXT_CREATION_API` set to
-   `GLFW_NATIVE_CONTEXT_API` (#2518)
+ - Bugfix: `glfwGetKeyName` emitted `GLFW_INVALID_VALUE` for scancodes with no
+   key token (#1785,#2214)
+ - [Wayland] Bugfix: Terminating the library before showing a window could segfault
+ - [Wayland] Bugfix: Compilation failed on FreeBSD (#2445)
+ - [Linux] Bugfix: `regfree´ was called on invalid data (#2464)
+ - [WGL] Bugfix: Context creation failed in Parallels VM (#2191,#2406,#2467)
 
 
 ## Contact
