@@ -1,5 +1,5 @@
 //========================================================================
-// GLFW 3.3 EGL - www.glfw.org
+// GLFW 3.4 EGL - www.glfw.org
 //------------------------------------------------------------------------
 // Copyright (c) 2002-2006 Marcus Geelnard
 // Copyright (c) 2006-2017 Camilla Löwy <elmindreda@glfw.org>
@@ -80,8 +80,6 @@ typedef struct wl_egl_window* EGLNativeWindowType;
 #define EGL_OPENGL_ES_API 0x30a0
 #define EGL_OPENGL_API 0x30a2
 #define EGL_NONE 0x3038
-#define EGL_RENDER_BUFFER 0x3086
-#define EGL_SINGLE_BUFFER 0x3085
 #define EGL_EXTENSIONS 0x3055
 #define EGL_CONTEXT_CLIENT_VERSION 0x3098
 #define EGL_NATIVE_VISUAL_ID 0x302e
@@ -108,7 +106,8 @@ typedef struct wl_egl_window* EGLNativeWindowType;
 #define EGL_CONTEXT_RELEASE_BEHAVIOR_KHR 0x2097
 #define EGL_CONTEXT_RELEASE_BEHAVIOR_NONE_KHR 0
 #define EGL_CONTEXT_RELEASE_BEHAVIOR_FLUSH_KHR 0x2098
-#define EGL_PRESENT_OPAQUE_EXT 0x31df
+
+#define EGL_BUFFER_AGE_EXT 0x313D
 
 typedef int EGLint;
 typedef unsigned int EGLBoolean;
@@ -134,7 +133,9 @@ typedef EGLBoolean (EGLAPIENTRY * PFN_eglMakeCurrent)(EGLDisplay,EGLSurface,EGLS
 typedef EGLBoolean (EGLAPIENTRY * PFN_eglSwapBuffers)(EGLDisplay,EGLSurface);
 typedef EGLBoolean (EGLAPIENTRY * PFN_eglSwapInterval)(EGLDisplay,EGLint);
 typedef const char* (EGLAPIENTRY * PFN_eglQueryString)(EGLDisplay,EGLint);
+typedef EGLBoolean (EGLAPIENTRY * PFN_eglQuerySurface)(EGLDisplay,EGLSurface,EGLint,EGLint*);
 typedef GLFWglproc (EGLAPIENTRY * PFN_eglGetProcAddress)(const char*);
+typedef EGLBoolean (EGLAPIENTRY * PFN_eglSwapBuffersWithDamageKHR)(EGLDisplay,EGLSurface,EGLint*,EGLint);
 #define eglGetConfigAttrib _glfw.egl.GetConfigAttrib
 #define eglGetConfigs _glfw.egl.GetConfigs
 #define eglGetDisplay _glfw.egl.GetDisplay
@@ -150,7 +151,9 @@ typedef GLFWglproc (EGLAPIENTRY * PFN_eglGetProcAddress)(const char*);
 #define eglSwapBuffers _glfw.egl.SwapBuffers
 #define eglSwapInterval _glfw.egl.SwapInterval
 #define eglQueryString _glfw.egl.QueryString
+#define eglQuerySurface _glfw.egl.QuerySurface
 #define eglGetProcAddress _glfw.egl.GetProcAddress
+#define eglSwapBuffersWithDamageKHR _glfw.egl.SwapBuffersWithDamageKHR
 
 #define _GLFW_EGL_CONTEXT_STATE            _GLFWcontextEGL egl
 #define _GLFW_EGL_LIBRARY_CONTEXT_STATE    _GLFWlibraryEGL egl
@@ -165,6 +168,7 @@ typedef struct _GLFWcontextEGL
    EGLSurface       surface;
 
    void*            client;
+
 } _GLFWcontextEGL;
 
 // EGL-specific global data
@@ -180,7 +184,7 @@ typedef struct _GLFWlibraryEGL
     GLFWbool        KHR_gl_colorspace;
     GLFWbool        KHR_get_all_proc_addresses;
     GLFWbool        KHR_context_flush_control;
-    GLFWbool        EXT_present_opaque;
+    GLFWbool        KHR_swap_buffers_with_damage;
 
     void*           handle;
 
@@ -199,7 +203,10 @@ typedef struct _GLFWlibraryEGL
     PFN_eglSwapBuffers          SwapBuffers;
     PFN_eglSwapInterval         SwapInterval;
     PFN_eglQueryString          QueryString;
+    PFN_eglQuerySurface         QuerySurface;
     PFN_eglGetProcAddress       GetProcAddress;
+    PFN_eglSwapBuffersWithDamageKHR SwapBuffersWithDamageKHR;
+
 } _GLFWlibraryEGL;
 
 
