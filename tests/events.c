@@ -424,6 +424,57 @@ static void char_mods_callback(GLFWwindow* window, unsigned int codepoint, int m
             get_mods_name(mods));
 }
 
+static void preedit_callback(GLFWwindow* window,
+                             unsigned int* string,
+                             int blockLength,
+                             int* blocks,
+                             int focusedBlock)
+{
+    Slot* slot = glfwGetWindowUserPointer(window);
+    int i, blockIndex = -1, blockCount = 0;
+    int width, height;
+
+    printf("%08x to %i at %0.3f: Preedit text ",
+           counter++, slot->number, glfwGetTime());
+
+    if (*string && blockLength)
+    {
+        for (i = 0;  string[i];  i++)
+        {
+            if (blockCount == 0)
+            {
+                if (blockIndex == focusedBlock)
+                    printf("]");
+
+                blockIndex++;
+                blockCount = blocks[blockIndex];
+                printf("\n   block %d: ", blockIndex);
+                if (blockIndex == focusedBlock)
+                    printf("[");
+            }
+
+            printf("%s", get_character_string(string[i]));
+            blockCount--;
+        }
+
+        if (blockIndex == focusedBlock)
+            printf("]");
+
+        printf("\n");
+        glfwGetWindowSize(window, &width, &height);
+        glfwSetPreeditCaretPos(window, width / 2, height / 2, 20);
+    }
+    else
+        printf("(empty)\n");
+}
+
+static void ime_callback(GLFWwindow* window)
+{
+    Slot* slot = glfwGetWindowUserPointer(window);
+    printf("%08x to %i at %0.3f: IME switched\n",
+           counter++, slot->number, glfwGetTime());
+}
+
 static void drop_callback(GLFWwindow* window, int count, const char** paths)
 {
     int i;
@@ -609,6 +660,8 @@ int main(int argc, char** argv)
         glfwSetKeyCallback(slots[i].window, key_callback);
         glfwSetCharCallback(slots[i].window, char_callback);
         glfwSetCharModsCallback(slots[i].window, char_mods_callback);
+        glfwSetPreeditCallback(slots[i].window, preedit_callback);
+        glfwSetIMEStatusCallback(slots[i].window, ime_callback);
         glfwSetDropCallback(slots[i].window, drop_callback);
 
         glfwMakeContextCurrent(slots[i].window);
