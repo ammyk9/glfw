@@ -1,8 +1,8 @@
 //========================================================================
-// GLFW 3.4 EGL - www.glfw.org
+// GLFW 3.3 EGL - www.glfw.org
 //------------------------------------------------------------------------
 // Copyright (c) 2002-2006 Marcus Geelnard
-// Copyright (c) 2006-2017 Camilla Löwy <elmindreda@glfw.org>
+// Copyright (c) 2006-2016 Camilla Löwy <elmindreda@glfw.org>
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -43,30 +43,38 @@ typedef Window EGLNativeWindowType;
  #define EGLAPIENTRY
 typedef struct wl_display* EGLNativeDisplayType;
 typedef struct wl_egl_window* EGLNativeWindowType;
+#elif defined(_GLFW_MIR)
+ #define EGLAPIENTRY
+typedef MirEGLNativeDisplayType EGLNativeDisplayType;
+typedef MirEGLNativeWindowType EGLNativeWindowType;
+#elif defined(_GLFW_EGLDEVICE)
+ #define EGLAPIENTRY
+typedef void* EGLNativeDisplayType;
+typedef int EGLNativeWindowType;
 #else
  #error "No supported EGL platform selected"
 #endif
 
-#define EGL_SUCCESS 0x3000
-#define EGL_NOT_INITIALIZED 0x3001
+#define EGL_SUCCESS	0x3000
+#define EGL_NOT_INITIALIZED	0x3001
 #define EGL_BAD_ACCESS 0x3002
 #define EGL_BAD_ALLOC 0x3003
 #define EGL_BAD_ATTRIBUTE 0x3004
 #define EGL_BAD_CONFIG 0x3005
-#define EGL_BAD_CONTEXT 0x3006
-#define EGL_BAD_CURRENT_SURFACE 0x3007
-#define EGL_BAD_DISPLAY 0x3008
+#define EGL_BAD_CONTEXT	0x3006
+#define EGL_BAD_CURRENT_SURFACE	0x3007
+#define EGL_BAD_DISPLAY	0x3008
 #define EGL_BAD_MATCH 0x3009
 #define EGL_BAD_NATIVE_PIXMAP 0x300a
 #define EGL_BAD_NATIVE_WINDOW 0x300b
 #define EGL_BAD_PARAMETER 0x300c
-#define EGL_BAD_SURFACE 0x300d
+#define EGL_BAD_SURFACE	0x300d
 #define EGL_CONTEXT_LOST 0x300e
 #define EGL_COLOR_BUFFER_TYPE 0x303f
 #define EGL_RGB_BUFFER 0x308e
 #define EGL_SURFACE_TYPE 0x3033
 #define EGL_WINDOW_BIT 0x0004
-#define EGL_RENDERABLE_TYPE 0x3040
+#define EGL_RENDERABLE_TYPE	0x3040
 #define EGL_OPENGL_ES_BIT 0x0001
 #define EGL_OPENGL_ES2_BIT 0x0004
 #define EGL_OPENGL_BIT 0x0008
@@ -76,10 +84,12 @@ typedef struct wl_egl_window* EGLNativeWindowType;
 #define EGL_RED_SIZE 0x3024
 #define EGL_DEPTH_SIZE 0x3025
 #define EGL_STENCIL_SIZE 0x3026
-#define EGL_SAMPLES 0x3031
+#define EGL_SAMPLES	0x3031
 #define EGL_OPENGL_ES_API 0x30a0
 #define EGL_OPENGL_API 0x30a2
 #define EGL_NONE 0x3038
+#define EGL_WIDTH 0x3057
+#define EGL_HEIGHT 0x3056
 #define EGL_EXTENSIONS 0x3055
 #define EGL_CONTEXT_CLIENT_VERSION 0x3098
 #define EGL_NATIVE_VISUAL_ID 0x302e
@@ -107,8 +117,6 @@ typedef struct wl_egl_window* EGLNativeWindowType;
 #define EGL_CONTEXT_RELEASE_BEHAVIOR_NONE_KHR 0
 #define EGL_CONTEXT_RELEASE_BEHAVIOR_FLUSH_KHR 0x2098
 
-#define EGL_BUFFER_AGE_EXT 0x313D
-
 typedef int EGLint;
 typedef unsigned int EGLBoolean;
 typedef unsigned int EGLenum;
@@ -116,6 +124,7 @@ typedef void* EGLConfig;
 typedef void* EGLContext;
 typedef void* EGLDisplay;
 typedef void* EGLSurface;
+typedef intptr_t EGLAttrib;
 
 // EGL function pointer typedefs
 typedef EGLBoolean (EGLAPIENTRY * PFN_eglGetConfigAttrib)(EGLDisplay,EGLConfig,EGLint,EGLint*);
@@ -133,9 +142,7 @@ typedef EGLBoolean (EGLAPIENTRY * PFN_eglMakeCurrent)(EGLDisplay,EGLSurface,EGLS
 typedef EGLBoolean (EGLAPIENTRY * PFN_eglSwapBuffers)(EGLDisplay,EGLSurface);
 typedef EGLBoolean (EGLAPIENTRY * PFN_eglSwapInterval)(EGLDisplay,EGLint);
 typedef const char* (EGLAPIENTRY * PFN_eglQueryString)(EGLDisplay,EGLint);
-typedef EGLBoolean (EGLAPIENTRY * PFN_eglQuerySurface)(EGLDisplay,EGLSurface,EGLint,EGLint*);
 typedef GLFWglproc (EGLAPIENTRY * PFN_eglGetProcAddress)(const char*);
-typedef EGLBoolean (EGLAPIENTRY * PFN_eglSwapBuffersWithDamageKHR)(EGLDisplay,EGLSurface,EGLint*,EGLint);
 #define eglGetConfigAttrib _glfw.egl.GetConfigAttrib
 #define eglGetConfigs _glfw.egl.GetConfigs
 #define eglGetDisplay _glfw.egl.GetDisplay
@@ -151,9 +158,7 @@ typedef EGLBoolean (EGLAPIENTRY * PFN_eglSwapBuffersWithDamageKHR)(EGLDisplay,EG
 #define eglSwapBuffers _glfw.egl.SwapBuffers
 #define eglSwapInterval _glfw.egl.SwapInterval
 #define eglQueryString _glfw.egl.QueryString
-#define eglQuerySurface _glfw.egl.QuerySurface
 #define eglGetProcAddress _glfw.egl.GetProcAddress
-#define eglSwapBuffersWithDamageKHR _glfw.egl.SwapBuffersWithDamageKHR
 
 #define _GLFW_EGL_CONTEXT_STATE            _GLFWcontextEGL egl
 #define _GLFW_EGL_LIBRARY_CONTEXT_STATE    _GLFWlibraryEGL egl
@@ -184,7 +189,6 @@ typedef struct _GLFWlibraryEGL
     GLFWbool        KHR_gl_colorspace;
     GLFWbool        KHR_get_all_proc_addresses;
     GLFWbool        KHR_context_flush_control;
-    GLFWbool        KHR_swap_buffers_with_damage;
 
     void*           handle;
 
@@ -203,9 +207,7 @@ typedef struct _GLFWlibraryEGL
     PFN_eglSwapBuffers          SwapBuffers;
     PFN_eglSwapInterval         SwapInterval;
     PFN_eglQueryString          QueryString;
-    PFN_eglQuerySurface         QuerySurface;
     PFN_eglGetProcAddress       GetProcAddress;
-    PFN_eglSwapBuffersWithDamageKHR SwapBuffersWithDamageKHR;
 
 } _GLFWlibraryEGL;
 
@@ -216,8 +218,7 @@ GLFWbool _glfwCreateContextEGL(_GLFWwindow* window,
                                const _GLFWctxconfig* ctxconfig,
                                const _GLFWfbconfig* fbconfig);
 #if defined(_GLFW_X11)
-GLFWbool _glfwChooseVisualEGL(const _GLFWwndconfig* wndconfig,
-                              const _GLFWctxconfig* ctxconfig,
+GLFWbool _glfwChooseVisualEGL(const _GLFWctxconfig* ctxconfig,
                               const _GLFWfbconfig* fbconfig,
                               Visual** visual, int* depth);
 #endif /*_GLFW_X11*/
