@@ -2,7 +2,7 @@
 // GLFW 3.3 X11 - www.glfw.org
 //------------------------------------------------------------------------
 // Copyright (c) 2002-2006 Marcus Geelnard
-// Copyright (c) 2006-2019 Camilla Löwy <elmindreda@glfw.org>
+// Copyright (c) 2006-2016 Camilla Löwy <elmindreda@glfw.org>
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -116,13 +116,6 @@ typedef int (* PFN_XISelectEvents)(Display*,Window,XIEventMask*,int);
 #define XIQueryVersion _glfw.x11.xi.QueryVersion
 #define XISelectEvents _glfw.x11.xi.SelectEvents
 
-typedef Bool (* PFN_XRenderQueryExtension)(Display*,int*,int*);
-typedef Status (* PFN_XRenderQueryVersion)(Display*dpy,int*,int*);
-typedef XRenderPictFormat* (* PFN_XRenderFindVisualFormat)(Display*,Visual const*);
-#define XRenderQueryExtension _glfw.x11.xrender.QueryExtension
-#define XRenderQueryVersion _glfw.x11.xrender.QueryVersion
-#define XRenderFindVisualFormat _glfw.x11.xrender.FindVisualFormat
-
 typedef VkFlags VkXlibSurfaceCreateFlagsKHR;
 typedef VkFlags VkXcbSurfaceCreateFlagsKHR;
 
@@ -180,15 +173,11 @@ typedef struct _GLFWwindowX11
 {
     Colormap        colormap;
     Window          handle;
-    Window          parent;
     XIC             ic;
 
     GLFWbool        overrideRedirect;
     GLFWbool        iconified;
     GLFWbool        maximized;
-
-    // Whether the visual supports framebuffer transparency
-    GLFWbool        transparent;
 
     // Cached position and size used to filter out duplicate events
     int             width, height;
@@ -199,9 +188,9 @@ typedef struct _GLFWwindowX11
     // The last position the cursor was warped to by GLFW
     int             warpCursorPosX, warpCursorPosY;
 
-    // The time of the last KeyPress event per keycode, for discarding
-    // duplicate key events generated for some keys by ibus
-    Time            keyPressTimes[256];
+    // The time of the last KeyPress event
+    Time            lastKeyTime;
+
 } _GLFWwindowX11;
 
 // X11-specific global data
@@ -212,8 +201,6 @@ typedef struct _GLFWlibraryX11
     int             screen;
     Window          root;
 
-    // System content scale
-    float           contentScaleX, contentScaleY;
     // Helper window for IPC
     Window          helperWindowHandle;
     // Invisible cursor for hidden cursor mode
@@ -222,8 +209,6 @@ typedef struct _GLFWlibraryX11
     XContext        context;
     // XIM input method
     XIM             im;
-    // The previous X error handler, to be restored later
-    XErrorHandler   errorHandler;
     // Most recent error code received by X error handler
     int             errorCode;
     // Primary selection string (while the primary selection is owned)
@@ -231,7 +216,7 @@ typedef struct _GLFWlibraryX11
     // Clipboard string (while the selection is owned)
     char*           clipboardString;
     // Key name string
-    char            keynames[GLFW_KEY_LAST + 1][5];
+    char            keyName[5];
     // X11 keycode to GLFW key LUT
     short int       keycodes[256];
     // GLFW key to X11 keycode LUT
@@ -240,11 +225,11 @@ typedef struct _GLFWlibraryX11
     double          restoreCursorPosX, restoreCursorPosY;
     // The window whose disabled cursor mode is active
     _GLFWwindow*    disabledCursorWindow;
-    int             emptyEventPipe[2];
+    // State for accumulating a non-wrapping event time
+    Time            lastTimestamp;
+    uint64_t        eventTime;
 
     // Window manager atoms
-    Atom            NET_SUPPORTED;
-    Atom            NET_SUPPORTING_WM_CHECK;
     Atom            WM_PROTOCOLS;
     Atom            WM_STATE;
     Atom            WM_DELETE_WINDOW;
@@ -263,10 +248,6 @@ typedef struct _GLFWlibraryX11
     Atom            NET_WM_STATE_DEMANDS_ATTENTION;
     Atom            NET_WM_BYPASS_COMPOSITOR;
     Atom            NET_WM_FULLSCREEN_MONITORS;
-    Atom            NET_WM_WINDOW_OPACITY;
-    Atom            NET_WM_CM_Sx;
-    Atom            NET_WORKAREA;
-    Atom            NET_CURRENT_DESKTOP;
     Atom            NET_ACTIVE_WINDOW;
     Atom            NET_FRAME_EXTENTS;
     Atom            NET_REQUEST_FRAME_EXTENTS;
@@ -287,7 +268,6 @@ typedef struct _GLFWlibraryX11
     // Selection (clipboard) atoms
     Atom            TARGETS;
     Atom            MULTIPLE;
-    Atom            INCR;
     Atom            CLIPBOARD;
     Atom            PRIMARY;
     Atom            CLIPBOARD_MANAGER;
@@ -327,14 +307,13 @@ typedef struct _GLFWlibraryX11
     } randr;
 
     struct {
-        GLFWbool     available;
-        GLFWbool     detectable;
-        int          majorOpcode;
-        int          eventBase;
-        int          errorBase;
-        int          major;
-        int          minor;
-        unsigned int group;
+        GLFWbool    available;
+        GLFWbool    detectable;
+        int         majorOpcode;
+        int         eventBase;
+        int         errorBase;
+        int         major;
+        int         minor;
     } xkb;
 
     struct {
@@ -396,17 +375,6 @@ typedef struct _GLFWlibraryX11
         PFN_XISelectEvents SelectEvents;
     } xi;
 
-    struct {
-        GLFWbool    available;
-        void*       handle;
-        int         major;
-        int         minor;
-        int         eventBase;
-        int         errorBase;
-        PFN_XRenderQueryExtension QueryExtension;
-        PFN_XRenderQueryVersion QueryVersion;
-        PFN_XRenderFindVisualFormat FindVisualFormat;
-    } xrender;
 } _GLFWlibraryX11;
 
 // X11-specific per-monitor data
@@ -420,6 +388,7 @@ typedef struct _GLFWmonitorX11
     // Index of corresponding Xinerama screen,
     // for EWMH full screen window placement
     int             index;
+
 } _GLFWmonitorX11;
 
 // X11-specific per-cursor data
@@ -427,11 +396,12 @@ typedef struct _GLFWmonitorX11
 typedef struct _GLFWcursorX11
 {
     Cursor handle;
+
 } _GLFWcursorX11;
 
 
 void _glfwPollMonitorsX11(void);
-void _glfwSetVideoModeX11(_GLFWmonitor* monitor, const GLFWvidmode* desired);
+GLFWbool _glfwSetVideoModeX11(_GLFWmonitor* monitor, const GLFWvidmode* desired);
 void _glfwRestoreVideoModeX11(_GLFWmonitor* monitor);
 
 Cursor _glfwCreateCursorX11(const GLFWimage* image, int xhot, int yhot);
@@ -440,7 +410,6 @@ unsigned long _glfwGetWindowPropertyX11(Window window,
                                         Atom property,
                                         Atom type,
                                         unsigned char** value);
-GLFWbool _glfwIsVisualTransparentX11(Visual* visual);
 
 void _glfwGrabErrorHandlerX11(void);
 void _glfwReleaseErrorHandlerX11(void);
