@@ -1222,6 +1222,11 @@ void _glfwPlatformFocusWindow(_GLFWwindow* window)
     } // autoreleasepool
 }
 
+void _glfwPlatformDragWindow(_GLFWwindow* window)
+{
+    [window->ns.object performWindowDragWithEvent:[NSApp currentEvent]];
+}
+
 void _glfwPlatformSetWindowMonitor(_GLFWwindow* window,
                                    _GLFWmonitor* monitor,
                                    int xpos, int ypos,
