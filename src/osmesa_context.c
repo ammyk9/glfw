@@ -24,10 +24,6 @@
 //    distribution.
 //
 //========================================================================
-// Please use C89 style variable declarations in this file because VS 2010
-//========================================================================
-
-#include "internal.h"
 
 #include <stdlib.h>
 #include <string.h>
